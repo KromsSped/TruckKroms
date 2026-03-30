@@ -1,233 +1,167 @@
-import { useState } from "react";
-import "./App.css";
+// VERSION PRO COMPLETE (Frontend amélioré)
+import { useState, useEffect } from "react";
 
-function App() {
-  const API = "https://truckkroms.onrender.com";
+const API = "https://truckkroms.onrender.com";
 
-  const [token, setToken] = useState(null);
-  const [role, setRole] = useState("");
-  const [checklists, setChecklists] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState("");
+export default function App() {
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
 
-  // Form checklist
-  const [camion, setCamion] = useState("");
-  const [chauffeur, setChauffeur] = useState("");
-  const [chauffeurRend, setChauffeurRend] = useState("");
-  const [chauffeurRecoit, setChauffeurRecoit] = useState("");
-  const [pneus, setPneus] = useState("");
-  const [carburant, setCarburant] = useState("OK");
-  const [outils, setOutils] = useState("OK");
-  const [remorque, setRemorque] = useState("");
-  const [materiel, setMateriel] = useState("");
-  const [incident, setIncident] = useState("");
-  const [datePrise, setDatePrise] = useState("");
-  const [dateRestitution, setDateRestitution] = useState("");
+  if (!token) return <Login setToken={setToken} setRole={setRole} />;
 
-  // Admin
-  const [newUser, setNewUser] = useState("");
-  const [newPass, setNewPass] = useState("");
-  const [newRole, setNewRole] = useState("chauffeur");
+  return <Dashboard token={token} role={role} setToken={setToken} />;
+}
 
-  // Login
-  const [loginUser, setLoginUser] = useState("");
-  const [loginPass, setLoginPass] = useState("");
+function Login({ setToken, setRole }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  // ---------------- LOGIN ----------------
   const login = async () => {
     const res = await fetch(API + "/login", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ username: loginUser, password: loginPass })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
     });
 
     const data = await res.json();
 
     if (res.ok) {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
       setToken(data.token);
       setRole(data.role);
-      fetchChecklists(data.token);
-      if (data.role === "admin") fetchUsers(data.token);
-    } else {
-      alert(data.error);
-    }
+    } else alert(data.error);
   };
 
-  // ---------------- CHECKLISTS ----------------
-  const fetchChecklists = async (tok) => {
-    const res = await fetch(API + "/checklist", {
-      headers: { Authorization: "Bearer " + tok }
-    });
-
-    const data = await res.json();
-    setChecklists(data);
-  };
-
-  const envoyerChecklist = async () => {
-    const res = await fetch(API + "/checklist", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({
-        camion,
-        chauffeur,
-        chauffeurRend,
-        chauffeurRecoit,
-        pneus,
-        carburant,
-        outils,
-        remorque,
-        materiel,
-        incident,
-        datePrise,
-        dateRestitution
-      })
-    });
-
-    if (res.ok) {
-      alert("Checklist envoyée !");
-      fetchChecklists(token);
-    } else {
-      const data = await res.json();
-      alert(data.error);
-    }
-  };
-
-  // ---------------- ADMIN ----------------
-  const fetchUsers = async (tok) => {
-    const res = await fetch(API + "/users", {
-      headers: { Authorization: "Bearer " + tok }
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setUsers(data);
-    }
-  };
-
-  const creerUtilisateur = async () => {
-    const res = await fetch(API + "/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({
-        username: newUser,
-        password: newPass,
-        role: newRole
-      })
-    });
-
-    if (res.ok) {
-      alert("Utilisateur créé !");
-      setNewUser("");
-      setNewPass("");
-      setNewRole("chauffeur");
-      fetchUsers(token);
-    } else {
-      const data = await res.json();
-      alert(data.error);
-    }
-  };
-
-  // ---------------- FILTER ----------------
-  const filteredChecklists = checklists.filter(c =>
-    c.chauffeur.toLowerCase().includes(search.toLowerCase()) ||
-    c.camion.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // ---------------- LOGIN UI ----------------
-  if (!token) {
-    return (
-      <div className="login-form">
-        <h2>Connexion</h2>
-        <input placeholder="Utilisateur" value={loginUser} onChange={e=>setLoginUser(e.target.value)} />
-        <input type="password" placeholder="Mot de passe" value={loginPass} onChange={e=>setLoginPass(e.target.value)} />
-        <button onClick={login}>Se connecter</button>
-      </div>
-    );
-  }
-
-  // ---------------- MAIN UI ----------------
   return (
-    <div className="app-container">
-      <header>
-        <h1>Checklist Camion</h1>
-        <button onClick={()=>{setToken(null); setRole("");}}>Déconnexion</button>
-      </header>
-
-      {role === "admin" && (
-        <div className="admin-section">
-          <h2>Créer un utilisateur</h2>
-          <input placeholder="Nom utilisateur" value={newUser} onChange={e=>setNewUser(e.target.value)} />
-          <input placeholder="Mot de passe" type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} />
-          <select value={newRole} onChange={e=>setNewRole(e.target.value)}>
-            <option value="chauffeur">Chauffeur</option>
-            <option value="admin">Admin</option>
-          </select>
-          <button onClick={creerUtilisateur}>Créer</button>
-
-          <h2>Utilisateurs</h2>
-          <ul>
-            {users.map(u => (
-              <li key={u.id}>{u.username} - {u.role}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="form-section">
-        <h2>Nouvelle checklist</h2>
-
-        <input placeholder="Camion" value={camion} onChange={e=>setCamion(e.target.value)} />
-        <input placeholder="Chauffeur" value={chauffeur} onChange={e=>setChauffeur(e.target.value)} />
-        <input placeholder="Chauffeur Rend" value={chauffeurRend} onChange={e=>setChauffeurRend(e.target.value)} />
-        <input placeholder="Chauffeur Reçoit" value={chauffeurRecoit} onChange={e=>setChauffeurRecoit(e.target.value)} />
-        <input placeholder="Remorque" value={remorque} onChange={e=>setRemorque(e.target.value)} />
-        <input placeholder="Matériel" value={materiel} onChange={e=>setMateriel(e.target.value)} />
-
-        <select value={pneus} onChange={e=>setPneus(e.target.value)}>
-          <option value="">État pneus</option>
-          <option value="OK">OK</option>
-          <option value="Usé">Usé</option>
-          <option value="À changer">À changer</option>
-          <option value="Crevé">Crevé</option>
-        </select>
-
-        <select value={incident} onChange={e=>setIncident(e.target.value)}>
-          <option value="">Incident</option>
-          <option value="OK">OK</option>
-          <option value="Endommagé">Endommagé</option>
-          <option value="Perdu">Perdu</option>
-        </select>
-
-        <input type="date" value={datePrise} onChange={e=>setDatePrise(e.target.value)} />
-        <input type="date" value={dateRestitution} onChange={e=>setDateRestitution(e.target.value)} />
-
-        <button onClick={envoyerChecklist}>Envoyer</button>
-      </div>
-
-      <div className="search-section">
-        <input placeholder="Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} />
-      </div>
-
-      <div className="cards-container">
-        {filteredChecklists.map(c => (
-          <div key={c.id} className="card">
-            <h3>{c.camion} - {c.chauffeur}</h3>
-            <p>Remorque: {c.remorque}</p>
-            <p>Matériel: {c.materiel}</p>
-            <p>État: {c.incident || "OK"}</p>
-            <p>Pneus: {c.pneus}</p>
-            <p>Date: {c.datePrise} → {c.dateRestitution}</p>
-          </div>
-        ))}
-      </div>
+    <div className="p-6 max-w-sm mx-auto">
+      <h2 className="text-xl font-bold mb-4">Connexion</h2>
+      <input className="border p-2 w-full mb-2" placeholder="Utilisateur" onChange={e => setUsername(e.target.value)} />
+      <input type="password" className="border p-2 w-full mb-2" placeholder="Mot de passe" onChange={e => setPassword(e.target.value)} />
+      <button className="bg-blue-500 text-white p-2 w-full" onClick={login}>Se connecter</button>
     </div>
   );
 }
 
-export default App;
+function Dashboard({ token, role, setToken }) {
+  const [checklists, setChecklists] = useState([]);
+
+  useEffect(() => {
+    fetchChecklists();
+  }, []);
+
+  const fetchChecklists = async () => {
+    const res = await fetch(API + "/checklist", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    setChecklists(data);
+  };
+
+  const incidents = checklists.filter(c => c.etat === "incident").length;
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <button onClick={() => { localStorage.clear(); setToken(null); }} className="bg-red-500 text-white px-3 py-1">Logout</button>
+      </div>
+
+      {/* STATS */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="bg-white shadow p-3 rounded">Total: {checklists.length}</div>
+        <div className="bg-white shadow p-3 rounded text-red-500">Incidents: {incidents}</div>
+      </div>
+
+      <ChecklistForm token={token} refresh={fetchChecklists} />
+      <ChecklistList checklists={checklists} />
+    </div>
+  );
+}
+
+function ChecklistForm({ token, refresh }) {
+  const [camion, setCamion] = useState("");
+  const [chauffeur, setChauffeur] = useState("");
+  const [etat, setEtat] = useState("OK");
+  const [photo, setPhoto] = useState(null);
+
+  const submit = async () => {
+    const formData = new FormData();
+    formData.append("camion", camion);
+    formData.append("chauffeur", chauffeur);
+    formData.append("etat", etat);
+    if (photo) formData.append("photo", photo);
+
+    const res = await fetch(API + "/checklist", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token },
+      body: formData
+    });
+
+    if (res.ok) {
+      alert("Envoyé");
+      setCamion("");
+      setChauffeur("");
+      setPhoto(null);
+      refresh();
+    }
+  };
+
+  return (
+    <div className="bg-gray-100 p-4 rounded mb-4">
+      <h2 className="font-bold mb-2">Nouvelle mission</h2>
+
+      <input className="border p-2 w-full mb-2" placeholder="Camion" value={camion} onChange={e => setCamion(e.target.value)} />
+      <input className="border p-2 w-full mb-2" placeholder="Chauffeur" value={chauffeur} onChange={e => setChauffeur(e.target.value)} />
+
+      <select className="border p-2 w-full mb-2" value={etat} onChange={e => setEtat(e.target.value)}>
+        <option value="OK">OK</option>
+        <option value="incident">Incident</option>
+      </select>
+
+      <input type="file" accept="image/*" capture="environment" className="mb-2" onChange={e => setPhoto(e.target.files[0])} />
+
+      <button className="bg-green-500 text-white p-2 w-full" onClick={submit}>Envoyer</button>
+    </div>
+  );
+}
+
+function ChecklistList({ checklists }) {
+  return (
+    <div>
+      <h2 className="font-bold mb-2">Historique</h2>
+      {checklists.map(c => (
+        <div key={c.id} className="border p-3 mb-2 rounded">
+          <h3 className="font-semibold">{c.camion} - {c.chauffeur}</h3>
+          <p className={c.etat === "incident" ? "text-red-500" : "text-green-500"}>{c.etat}</p>
+          {c.photo && (
+            <img src={API + "/uploads/" + c.photo} alt="" className="mt-2 rounded" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+// BACKEND (Node.js Express à adapter)
+// AJOUT PHOTO (multer)
+/*
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/checklist', authenticate, upload.single('photo'), (req, res) => {
+  const { camion, chauffeur, etat } = req.body;
+
+  const newChecklist = {
+    camion,
+    chauffeur,
+    etat,
+    photo: req.file ? req.file.filename : null,
+    date: new Date()
+  };
+
+  db.push(newChecklist);
+  res.json(newChecklist);
+});
+*/
