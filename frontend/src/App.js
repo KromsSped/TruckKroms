@@ -50,17 +50,17 @@ function Login({ setToken, setRole }) {
 function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
 
-  const fetchChecklists = async () => {
-    const res = await fetch(API + "/checklist", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    const data = await res.json();
-    setChecklists(data);
-  };
-
   useEffect(() => {
+    const fetchChecklists = async () => {
+      const res = await fetch(API + "/checklist", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const data = await res.json();
+      setChecklists(data);
+    };
+
     fetchChecklists();
-  }, []);
+  }, [token]);
 
   const logout = () => {
     localStorage.clear();
@@ -72,14 +72,28 @@ function Dashboard({ token, setToken }) {
       <h1>Dashboard</h1>
       <button onClick={logout}>Déconnexion</button>
 
-      <ChecklistForm token={token} refresh={fetchChecklists} />
+      <Stats checklists={checklists} />
+      <ChecklistForm token={token} />
       <ChecklistList checklists={checklists} />
     </div>
   );
 }
 
+// ---------------- STATS ----------------
+function Stats({ checklists }) {
+  const total = checklists.length;
+  const incidents = checklists.filter(c => c.incident && c.incident !== "OK").length;
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <p>Total missions : {total}</p>
+      <p style={{ color: "red" }}>Incidents : {incidents}</p>
+    </div>
+  );
+}
+
 // ---------------- FORM ----------------
-function ChecklistForm({ token, refresh }) {
+function ChecklistForm({ token }) {
   const [camion, setCamion] = useState("");
   const [chauffeur, setChauffeur] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -99,16 +113,18 @@ function ChecklistForm({ token, refresh }) {
     });
 
     if (res.ok) {
-      alert("Envoyé !");
+      alert("Checklist envoyée !");
       setCamion("");
       setChauffeur("");
       setPhoto(null);
-      refresh();
+      window.location.reload(); // refresh simple
+    } else {
+      alert("Erreur");
     }
   };
 
   return (
-    <div>
+    <div style={{ marginBottom: 20 }}>
       <h2>Nouvelle checklist</h2>
       <input placeholder="Camion" value={camion} onChange={e => setCamion(e.target.value)} />
       <input placeholder="Chauffeur" value={chauffeur} onChange={e => setChauffeur(e.target.value)} />
@@ -124,8 +140,15 @@ function ChecklistList({ checklists }) {
     <div>
       <h2>Historique</h2>
       {checklists.map(c => (
-        <div key={c.id}>
+        <div key={c.id} style={{ border: "1px solid #ccc", marginBottom: 10, padding: 10 }}>
           <h3>{c.camion} - {c.chauffeur}</h3>
+
+          {c.incident && (
+            <p style={{ color: c.incident !== "OK" ? "red" : "green" }}>
+              {c.incident}
+            </p>
+          )}
+
           {c.photo && (
             <img
               src={API + "/uploads/" + c.photo}
