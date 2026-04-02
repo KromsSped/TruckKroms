@@ -4,23 +4,19 @@ const API = "https://truckkroms.onrender.com";
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [role, setRole] = useState(localStorage.getItem("role") || "");
 
-  if (!token) return <Login setToken={setToken} setRole={setRole} />;
+  if (!token) return <Login setToken={setToken} />;
   return <Dashboard token={token} setToken={setToken} />;
 }
 
-// ---------------- LOGIN ----------------
-function Login({ setToken, setRole }) {
+function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const login = async () => {
     const res = await fetch(API + "/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password })
     });
 
@@ -28,9 +24,7 @@ function Login({ setToken, setRole }) {
 
     if (res.ok) {
       localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
       setToken(data.token);
-      setRole(data.role);
     } else {
       alert(data.error);
     }
@@ -46,7 +40,6 @@ function Login({ setToken, setRole }) {
   );
 }
 
-// ---------------- DASHBOARD ----------------
 function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
 
@@ -72,90 +65,9 @@ function Dashboard({ token, setToken }) {
       <h1>Dashboard</h1>
       <button onClick={logout}>Déconnexion</button>
 
-      <Stats checklists={checklists} />
-      <ChecklistForm token={token} />
-      <ChecklistList checklists={checklists} />
-    </div>
-  );
-}
-
-// ---------------- STATS ----------------
-function Stats({ checklists }) {
-  const total = checklists.length;
-  const incidents = checklists.filter(c => c.incident && c.incident !== "OK").length;
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <p>Total missions : {total}</p>
-      <p style={{ color: "red" }}>Incidents : {incidents}</p>
-    </div>
-  );
-}
-
-// ---------------- FORM ----------------
-function ChecklistForm({ token }) {
-  const [camion, setCamion] = useState("");
-  const [chauffeur, setChauffeur] = useState("");
-  const [photo, setPhoto] = useState(null);
-
-  const submit = async () => {
-    const formData = new FormData();
-    formData.append("camion", camion);
-    formData.append("chauffeur", chauffeur);
-    if (photo) formData.append("photo", photo);
-
-    const res = await fetch(API + "/checklist", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + token
-      },
-      body: formData
-    });
-
-    if (res.ok) {
-      alert("Checklist envoyée !");
-      setCamion("");
-      setChauffeur("");
-      setPhoto(null);
-      window.location.reload(); // refresh simple
-    } else {
-      alert("Erreur");
-    }
-  };
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <h2>Nouvelle checklist</h2>
-      <input placeholder="Camion" value={camion} onChange={e => setCamion(e.target.value)} />
-      <input placeholder="Chauffeur" value={chauffeur} onChange={e => setChauffeur(e.target.value)} />
-      <input type="file" onChange={e => setPhoto(e.target.files[0])} />
-      <button onClick={submit}>Envoyer</button>
-    </div>
-  );
-}
-
-// ---------------- LIST ----------------
-function ChecklistList({ checklists }) {
-  return (
-    <div>
-      <h2>Historique</h2>
       {checklists.map(c => (
-        <div key={c.id} style={{ border: "1px solid #ccc", marginBottom: 10, padding: 10 }}>
-          <h3>{c.camion} - {c.chauffeur}</h3>
-
-          {c.incident && (
-            <p style={{ color: c.incident !== "OK" ? "red" : "green" }}>
-              {c.incident}
-            </p>
-          )}
-
-          {c.photo && (
-            <img
-              src={API + "/uploads/" + c.photo}
-              alt=""
-              width="200"
-            />
-          )}
+        <div key={c.id}>
+          {c.camion} - {c.chauffeur}
         </div>
       ))}
     </div>
