@@ -149,15 +149,22 @@ function Dashboard({ token, setToken }) {
 
       <h2>Historique</h2>
 
-      {checklists.length === 0 ? (
-        <p>Aucune checklist</p>
-      ) : (
-        checklists.map(c => (
-          <div key={c.id}>
-            {c.camion} - {c.chauffeur}
-          </div>
-        ))
-      )}
+     {checklists.map(c => (
+      <div key={c.id} style={{ border: "1px solid #ccc", marginBottom: 10, padding: 10 }}>
+        <p><b>Camion:</b> {c.camion}</p>
+        <p><b>Chauffeur:</b> {c.chauffeur}</p>
+        <p><b>Chauffeur Rend:</b> {c.chauffeurRend}</p>
+        <p><b>Chauffeur Reçoit:</b> {c.chauffeurRecoit}</p>
+        <p><b>Pneus:</b> {c.pneus}</p>
+        <p><b>Carburant:</b> {c.carburant}</p>
+        <p><b>Outils:</b> {c.outils}</p>
+        <p><b>Remorque:</b> {c.remorque}</p>
+        <p><b>Matériel:</b> {c.materiel}</p>
+        <p><b>Incident:</b> {c.incident}</p>
+        <p><b>Date prise:</b> {c.datePrise}</p>
+        <p><b>Date restitution:</b> {c.dateRestitution}</p>
+  </div>
+))}
     </div>
   );
 }
