@@ -9,6 +9,7 @@ export default function App() {
   return <Dashboard token={token} setToken={setToken} />;
 }
 
+// LOGIN
 function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +17,9 @@ function Login({ setToken }) {
   const login = async () => {
     const res = await fetch(API + "/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ username, password })
     });
 
@@ -40,6 +43,7 @@ function Login({ setToken }) {
   );
 }
 
+// DASHBOARD
 function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
   const [camion, setCamion] = useState("");
@@ -55,7 +59,7 @@ function Dashboard({ token, setToken }) {
 
   useEffect(() => {
     fetchChecklists();
-  }, []);
+  }, [token]);
 
   const logout = () => {
     localStorage.clear();
@@ -69,7 +73,10 @@ function Dashboard({ token, setToken }) {
         "Content-Type": "application/json",
         Authorization: "Bearer " + token
       },
-      body: JSON.stringify({ camion, chauffeur })
+      body: JSON.stringify({
+        camion,
+        chauffeur
+      })
     });
 
     if (res.ok) {
@@ -77,7 +84,7 @@ function Dashboard({ token, setToken }) {
       setChauffeur("");
       fetchChecklists();
     } else {
-      alert("Erreur");
+      alert("Erreur envoi");
     }
   };
 
