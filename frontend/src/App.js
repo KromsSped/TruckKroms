@@ -44,6 +44,12 @@ function Login({ setToken }) {
 // DASHBOARD
 function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
+  const [camion, setCamion] = useState("");
+  const [chauffeur, setChauffeur] = useState("");
+
+  useEffect(() => {
+    fetchChecklists();
+  }, [token]);
 
   const fetchChecklists = async () => {
     const res = await fetch(API + "/checklist", {
@@ -53,13 +59,31 @@ function Dashboard({ token, setToken }) {
     setChecklists(data);
   };
 
-  useEffect(() => {
-    fetchChecklists();
-  }, []);
-
   const logout = () => {
     localStorage.clear();
     setToken(null);
+  };
+
+  const ajouter = async () => {
+    const res = await fetch(API + "/checklist", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        camion,
+        chauffeur
+      })
+    });
+
+    if (res.ok) {
+      setCamion("");
+      setChauffeur("");
+      fetchChecklists();
+    } else {
+      alert("Erreur");
+    }
   };
 
   return (
@@ -67,35 +91,33 @@ function Dashboard({ token, setToken }) {
       <h1>Dashboard</h1>
       <button onClick={logout}>Déconnexion</button>
 
-      <ChecklistForm token={token} refresh={fetchChecklists} />
+      <h2>Ajouter</h2>
+      <input
+        placeholder="Camion"
+        value={camion}
+        onChange={e => setCamion(e.target.value)}
+      />
+      <input
+        placeholder="Chauffeur"
+        value={chauffeur}
+        onChange={e => setChauffeur(e.target.value)}
+      />
+      <button onClick={ajouter}>Envoyer</button>
 
       <h2>Historique</h2>
 
-      {checklists.length === 0 && <p>Aucune donnée</p>}
-
-      {checklists.map(c => (
-        <div key={c.id} style={{ border: "1px solid #ccc", marginBottom: 10 }}>
-          {c.camion} - {c.chauffeur}
-        </div>
-      ))}
+      {checklists.length === 0 ? (
+        <p>Aucune checklist</p>
+      ) : (
+        checklists.map(c => (
+          <div key={c.id}>
+            {c.camion} - {c.chauffeur}
+          </div>
+        ))
+      )}
     </div>
   );
 }
-
-// FORMULAIRE
-function ChecklistForm({ token, refresh }) {
-  const [camion, setCamion] = useState("");
-  const [chauffeur, setChauffeur] = useState("");
-
-  const submit = async () => {
-    const res = await fetch(API + "/checklist", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ camion, chauffeur })
-    });
 
     if (res.ok) {
       alert("Envoyé !");
