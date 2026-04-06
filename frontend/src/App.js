@@ -58,8 +58,16 @@ function Dashboard({ token, setToken }) {
   };
 
   useEffect(() => {
-    fetchChecklists();
-  }, [token]);
+  const fetchData = async () => {
+    const res = await fetch(API + "/checklist", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    setChecklists(data);
+  };
+
+  fetchData();
+}, [token]);
 
   const logout = () => {
     localStorage.clear();
