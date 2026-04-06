@@ -48,6 +48,16 @@ function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
   const [camion, setCamion] = useState("");
   const [chauffeur, setChauffeur] = useState("");
+  const [chauffeurRend, setChauffeurRend] = useState("");
+  const [chauffeurRecoit, setChauffeurRecoit] = useState("");
+  const [pneus, setPneus] = useState("");
+  const [carburant, setCarburant] = useState("");
+  const [outils, setOutils] = useState("");
+  const [remorque, setRemorque] = useState("");
+  const [materiel, setMateriel] = useState(""); 
+  const [incident, setIncident] = useState("");
+  const [datePrise, setDatePrise] = useState("");
+ const [dateRestitution, setDateRestitution] = useState("");
 
   const fetchChecklists = async () => {
     const res = await fetch(API + "/checklist", {
@@ -74,27 +84,48 @@ function Dashboard({ token, setToken }) {
     setToken(null);
   };
 
-  const ajouter = async () => {
-    const res = await fetch(API + "/checklist", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({
-        camion,
-        chauffeur
-      })
-    });
+ const ajouter = async () => {
+  const res = await fetch(API + "/checklist", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({
+      camion,
+      chauffeur,
+      chauffeurRend,
+      chauffeurRecoit,
+      pneus,
+      carburant,
+      outils,
+      remorque,
+      materiel,
+      incident,
+      datePrise,
+      dateRestitution
+    })
+  });
 
-    if (res.ok) {
-      setCamion("");
-      setChauffeur("");
-      fetchChecklists();
-    } else {
-      alert("Erreur envoi");
-    }
-  };
+  if (res.ok) {
+    setCamion("");
+    setChauffeur("");
+    setChauffeurRend("");
+    setChauffeurRecoit("");
+    setPneus("");
+    setCarburant("");
+    setOutils("");
+    setRemorque("");
+    setMateriel("");
+    setIncident("");
+    setDatePrise("");
+    setDateRestitution("");
+
+    fetchChecklists();
+  } else {
+    alert("Erreur envoi");
+  }
+};
 
   return (
     <div style={{ padding: 20 }}>
@@ -104,6 +135,16 @@ function Dashboard({ token, setToken }) {
       <h2>Ajouter une checklist</h2>
       <input value={camion} onChange={e => setCamion(e.target.value)} placeholder="Camion" />
       <input value={chauffeur} onChange={e => setChauffeur(e.target.value)} placeholder="Chauffeur" />
+      <input placeholder="Chauffeur Rend" onChange={e => setChauffeurRend(e.target.value)} />
+      <input placeholder="Chauffeur Reçoit" onChange={e => setChauffeurRecoit(e.target.value)} />
+      <input placeholder="Pneus" onChange={e => setPneus(e.target.value)} />
+      <input placeholder="Carburant" onChange={e => setCarburant(e.target.value)} />
+      <input placeholder="Outils" onChange={e => setOutils(e.target.value)} />
+      <input placeholder="Remorque" onChange={e => setRemorque(e.target.value)} />
+      <input placeholder="Matériel" onChange={e => setMateriel(e.target.value)} />
+      <input placeholder="Incident" onChange={e => setIncident(e.target.value)} />
+      <input type="date" onChange={e => setDatePrise(e.target.value)} />
+      <input type="date" onChange={e => setDateRestitution(e.target.value)} />
       <button onClick={ajouter}>Envoyer</button>
 
       <h2>Historique</h2>
