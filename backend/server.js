@@ -10,6 +10,7 @@ const SECRET_KEY = process.env.SECRET_KEY || "dev_secret";
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ---------------- DATABASE ----------------
 const db = new sqlite3.Database("./camion.db");
@@ -135,32 +136,24 @@ app.get("/checklist", authenticate, (req, res) => {
 
 // ---------------- ADD CHECKLIST ----------------
 app.post("/checklist", authenticate, (req, res) => {
-  const d = req.body;
+  const camion = req.body.camion;
+  const chauffeur = req.body.chauffeur;
+
+  // Vérification simple
+  if (!camion || !chauffeur) {
+    return res.status(400).json({ error: "Camion et chauffeur obligatoires" });
+  }
 
   db.run(
-    `INSERT INTO checklists (
-      camion, chauffeur, chauffeurRend, chauffeurRecoit,
-      pneus, carburant, outils, remorque, materiel,
-      incident, datePrise, dateRestitution, userId
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      d.camion,
-      d.chauffeur,
-      d.chauffeurRend,
-      d.chauffeurRecoit,
-      d.pneus,
-      d.carburant,
-      d.outils,
-      d.remorque,
-      d.materiel,
-      d.incident,
-      d.datePrise,
-      d.dateRestitution,
-      req.user.id
-    ],
+    `INSERT INTO checklists (camion, chauffeur, userId)
+     VALUES (?, ?, ?)`,
+    [camion, chauffeur, req.user.id],
     function (err) {
-      if (err) return res.status(500).json({ error: err.message });
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.message });
+      }
+
       res.json({ id: this.lastID });
     }
   );
