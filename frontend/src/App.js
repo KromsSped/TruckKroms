@@ -136,7 +136,6 @@ function Dashboard({ token, setToken }) {
       <input value={camion} onChange={e => setCamion(e.target.value)} placeholder="Camion" />
       <input value={chauffeur} onChange={e => setChauffeur(e.target.value)} placeholder="Chauffeur" />
       <input type="file" onChange={e => setPhoto(e.target.files[0])} />
-
       <input placeholder="Chauffeur Rend" value={chauffeurRend} onChange={e => setChauffeurRend(e.target.value)} />
       <input placeholder="Chauffeur Reçoit" value={chauffeurRecoit} onChange={e => setChauffeurRecoit(e.target.value)} />
       <input placeholder="Pneus" value={pneus} onChange={e => setPneus(e.target.value)} />
