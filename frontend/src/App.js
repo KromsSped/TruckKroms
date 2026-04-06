@@ -9,6 +9,7 @@ export default function App() {
   return <Dashboard token={token} setToken={setToken} />;
 }
 
+// LOGIN
 function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -40,20 +41,21 @@ function Login({ setToken }) {
   );
 }
 
+// DASHBOARD
 function Dashboard({ token, setToken }) {
   const [checklists, setChecklists] = useState([]);
 
-  useEffect(() => {
-    const fetchChecklists = async () => {
-      const res = await fetch(API + "/checklist", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      const data = await res.json();
-      setChecklists(data);
-    };
+  const fetchChecklists = async () => {
+    const res = await fetch(API + "/checklist", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    setChecklists(data);
+  };
 
+  useEffect(() => {
     fetchChecklists();
-  }, [token]);
+  }, []);
 
   const logout = () => {
     localStorage.clear();
@@ -65,11 +67,52 @@ function Dashboard({ token, setToken }) {
       <h1>Dashboard</h1>
       <button onClick={logout}>Déconnexion</button>
 
+      <ChecklistForm token={token} refresh={fetchChecklists} />
+
+      <h2>Historique</h2>
+
+      {checklists.length === 0 && <p>Aucune donnée</p>}
+
       {checklists.map(c => (
-        <div key={c.id}>
+        <div key={c.id} style={{ border: "1px solid #ccc", marginBottom: 10 }}>
           {c.camion} - {c.chauffeur}
         </div>
       ))}
+    </div>
+  );
+}
+
+// FORMULAIRE
+function ChecklistForm({ token, refresh }) {
+  const [camion, setCamion] = useState("");
+  const [chauffeur, setChauffeur] = useState("");
+
+  const submit = async () => {
+    const res = await fetch(API + "/checklist", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ camion, chauffeur })
+    });
+
+    if (res.ok) {
+      alert("Envoyé !");
+      setCamion("");
+      setChauffeur("");
+      refresh();
+    } else {
+      alert("Erreur");
+    }
+  };
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <h2>Nouvelle checklist</h2>
+      <input placeholder="Camion" value={camion} onChange={e => setCamion(e.target.value)} />
+      <input placeholder="Chauffeur" value={chauffeur} onChange={e => setChauffeur(e.target.value)} />
+      <button onClick={submit}>Envoyer</button>
     </div>
   );
 }
